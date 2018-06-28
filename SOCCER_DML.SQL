@@ -42,8 +42,6 @@ ORDER BY player_name
   
     --SUBSTR(player_name,시작번째, 글자수)
 
-
-
 SELECT position 포지션, player_name 이름
 FROM player
 WHERE team_id like 'K02'
@@ -129,9 +127,6 @@ WHERE p.team_id IN((SELECT T.TEAM_NAME
 ORDER BY t.team_name, p.player_name
 ;
 
-
-
-
 --SOCCER_SQL_009 
 -- 수원팀(ID: K02) 과 대전팀(ID: K10)선수들 중 이
 -- 키가 180 이상 183 이하인 선수들
@@ -165,13 +160,6 @@ WHERE p.height BETWEEN 180 AND 183
     IN ('삼성블루윙즈','시티즌')))
 ORDER BY p.height, t.team_name, p.player_name
 ;
-
-
-
-
-
-
-
 
 
 -- SOCCER_SQL_010
@@ -249,28 +237,6 @@ ORDER BY p.player_name
 -- 홈팀 이름과 원정팀 이름을
 -- 구하시오
 
-
-SELECT s.stadium_name 스타디움,
-    sc.sche_date 경기날짜,
-    t1.region_name || ' ' || t1.team_name 홈팀,
-    t2.region_name || ' ' || t2.team_name 원정팀,
-    sc.home_score "홈팀 점수",
-    sc.away_score "원정팀 점수"
-FROM team t1
-    JOIN stadium s
-        ON t1.stadium_id LIKE s.stadium_id
-    JOIN schedule sc
-        ON s.stadium_id LIKE sc.stadium_id
-    JOIN stadium sta
-        ON sta.hometeam_id LIKE sc.awayteam_id
-    JOIN team t2
-        ON t2.stadium_id LIKE sta.stadium_id
-WHERE sc.home_score - sc.away_score >= 3
-ORDER BY sc.sche_date
-;
-
-
-
 select st.stadium_name 스타디움,
     sc.sche_date 경기날짜,
     t1.region_name || ' ' || t1.team_name 홈팀,
@@ -289,7 +255,8 @@ order by sc.sche_date
 ;
 
 --선생님
-SELECT s.stadium_name 스타디움,
+SELECT 
+    s.stadium_name 스타디움,
     sc.sche_date 경기날짜,
     t1.region_name || ' ' || t1.team_name 홈팀,
     t2.region_name || ' ' || t2.team_name 원정팀,
@@ -311,11 +278,12 @@ order by sc.sche_date
 -- 홈팀이 없는 경기장까지 전부 나오도록
 -- 카운트 값은 20 , 일산 밑에 마산, 안양도 있음
 
-SELECT s.stadium_name,
-s.stadium_id,
-s.seat_count,
-s.hometeam_id,
-t.e_team_name
+SELECT
+    s.stadium_name,
+    s.stadium_id,
+    s.seat_count,
+    s.hometeam_id,
+    t.e_team_name
 FROM stadium s
     LEFT JOIN team t
     ON s.STADIUM_ID = t.STADIUM_ID
@@ -344,72 +312,239 @@ WHERE
 ;
 
 
-
 -- 018
 -- 최호진 선수의 소속팀과 포지션, 백넘버는 무엇입니까
 
-SELECT PLAYER_NAME 선수명, (SELECT T.TEAM_NAME 
-FROM TEAM T, PLAYER P
-WHERE T.TEAM_ID LIKE P.TEAM_ID
-AND P.PLAYER_NAME LIKE '최호진') 팀명,POSITION 포지션 , BACK_NO 백넘버
-FROM PLAYER
-WHERE PLAYER_NAME LIKE '최호진'
+SELECT 
+    P.PLAYER_NAME 선수명, 
+    T.TEAM_NAME 팀명,
+    P.POSITION 포지션 , 
+    P.BACK_NO 백넘버
+FROM PLAYER P
+    JOIN TEAM T
+    ON P.TEAM_ID LIKE T.TEAM_ID
+WHERE
+    P.PLAYER_NAME LIKE '최호진'
 ;
-
 
 -- 019
 -- 대전시티즌의 MF 평균키는 얼마입니까
 
-SELECT ROUND(AVG(HEIGHT),2) 평균키
-FROM PLAYER
-WHERE TEAM_ID LIKE 'K10'
-AND POSITION LIKE 'MF'
+SELECT 
+    ROUND(AVG(P.HEIGHT),2) 평균키
+FROM 
+    PLAYER P
+    JOIN TEAM T
+    ON P.TEAM_ID LIKE T.TEAM_ID
+WHERE T.TEAM_NAME LIKE '시티즌'
+AND P.POSITION LIKE 'MF'
 ;
-
 
 -- 020
 -- 2012년 월별 경기수를 구하시오
-
 SELECT 
     (SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201201%') "1월",
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201201%') "1월",
     (SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201202%') "2월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201203%') "3월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201204%') "4월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201205%') "5월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201206%') "6월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201207%') "7월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201208%') "8월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201209%') "9월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201210%') "10월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201211%') "11월",(SELECT COUNT(*)
-    FROM SCHEDULE SC1
-    WHERE SC1.SCHE_DATE LIKE '201212%') "12월"
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201202%') "2월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201203%') "3월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201204%') "4월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201205%') "5월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201206%') "6월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201207%') "7월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201208%') "8월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201209%') "9월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201210%') "10월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201211%') "11월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE 
+    WHERE SCHE_DATE LIKE '201212%') "12월"
 FROM DUAL
 ;
 
+-- 021
+-- 2012년 월별 진행된 경기수(GUBUN IS YES)를 구하시오
+-- 출력은 1월:20경기 이런식으로...
+
+SELECT 
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201201%'
+    AND GUBUN LIKE 'Y')||'경기' "1월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201202%'
+    AND GUBUN LIKE 'Y')||'경기' "2월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201203%'
+    AND GUBUN LIKE 'Y')||'경기' "3월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201204%'
+    AND GUBUN LIKE 'Y')||'경기' "4월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201205%'
+    AND GUBUN LIKE 'Y')||'경기' "5월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201206%'
+    AND GUBUN LIKE 'Y')||'경기' "6월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201207%'
+    AND GUBUN LIKE 'Y')||'경기' "7월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201208%'
+    AND GUBUN LIKE 'Y')||'경기' "8월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201209%'
+    AND GUBUN LIKE 'Y')||'경기' "9월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201210%'
+    AND GUBUN LIKE 'Y')||'경기' "10월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201211%'
+    AND GUBUN LIKE 'Y')||'경기' "11월",
+    (SELECT COUNT(*)
+    FROM SCHEDULE
+    WHERE SCHE_DATE LIKE '201212%'
+    AND GUBUN LIKE 'Y')||'경기 ' "12월"
+FROM DUAL
+;
+
+-- 022
+-- 2012년 9월 14일에 벌어질 경기는 어디와 어디입니까
+-- 홈팀: ?   원정팀: ? 로 출력
+
+SELECT 
+    HT.TEAM_NAME 홈팀, 
+    AT.TEAM_NAME 원정팀
+FROM SCHEDULE S
+    JOIN STADIUM STA
+        ON S.STADIUM_ID LIKE STA.STADIUM_ID
+    JOIN TEAM HT
+        ON S.HOMETEAM_ID LIKE HT.TEAM_ID
+    JOIN TEAM AT
+        ON S.AWAYTEAM_ID LIKE AT.TEAM_ID
+WHERE 
+    SCHE_DATE LIKE '20120914'
+;
 
 
-SELECT COUNT(*) "1월"
-FROM SCHEDULE SC1
-WHERE SC1.SCHE_DATE LIKE '201201%'
+--023
+-- GRUOP BY  사용
+-- 팀별 선수의 수 EX. 아이파크 20명
+
+SELECT 
+    T.TEAM_NAME 팀명,
+    COUNT(P.PLAYER_ID)||'명' 선수인원
+FROM
+    TEAM T
+    JOIN PLAYER P
+    ON T.TEAM_ID LIKE P.TEAM_ID
+GROUP BY
+    T.TEAM_NAME
+ORDER BY 
+    T.TEAM_NAME
+;
+
+--023 TEAM_NAME 을 쓰지 말아야하는상황
+SELECT 
+    (SELECT A.TEAM_NAME
+    FROM TEAM A
+    WHERE A.TEAM_ID LIKE T.TEAM_ID    
+    ) 팀명,
+    COUNT(P.PLAYER_ID)||'명' 선수인원
+FROM
+    TEAM T
+    JOIN PLAYER P
+    ON T.TEAM_ID LIKE P.TEAM_ID
+GROUP BY
+    T.TEAM_ID
+ORDER BY 
+    T.TEAM_ID
+;
+
+
+--023
+--팀별 골키퍼의 평균키
+-- 아이파크 180CM
+
+SELECT
+    T.TEAM_NAME 팀
+    ,ROUND(AVG(P.HEIGHT))||'cm' 평균키
+FROM
+    TEAM T
+    JOIN PLAYER P
+    ON T.TEAM_ID LIKE P.TEAM_ID
+WHERE
+    P.POSITION LIKE 'GK'
+GROUP BY
+    T.TEAM_NAME
+ORDER BY
+    T.TEAM_NAME
+;
+
+--023 TEAM_ID로 GROUP BY 할것
+SELECT
+    (
+    SELECT A.TEAM_NAME
+    FROM TEAM A
+    WHERE A.TEAM_ID LIKE T.TEAM_ID
+    ) 팀
+    ,ROUND(AVG(P.HEIGHT))||'cm' 평균키
+FROM
+    TEAM T
+    JOIN PLAYER P
+    ON T.TEAM_ID LIKE P.TEAM_ID
+WHERE
+    P.POSITION LIKE 'GK'
+GROUP BY
+    T.TEAM_ID
+ORDER BY
+    T.TEAM_ID
 ;
 
 
 
-
-
-
-
+SELECT
+    PLAYER_NAME 이름,
+    CASE 
+        WHEN POSITION IS NULL THEN '없음'
+        WHEN POSITION LIKE 'GK' THEN '골키퍼'
+        WHEN POSITION LIKE 'MF' THEN '미드필더'
+        WHEN POSITION LIKE 'DF' THEN '수비수'
+        WHEN POSITION LIKE 'FW' THEN '공격수'        
+        ELSE POSITION
+    END 포지션
+FROM 
+    PLAYER
+WHERE 
+    TEAM_ID = 'K08'
+;
