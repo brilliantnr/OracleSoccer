@@ -548,3 +548,332 @@ FROM
 WHERE 
     TEAM_ID = 'K08'
 ;
+
+
+
+--키 순으로 정렬하기!
+--hint : 인라인 뷰 이용
+
+--rownum 은 반드시 가상테이블(인라인뷰)에서 해서 밖에서 줘야함
+SELECT 
+    ROWNUM "No.",
+    --A.팀명,
+    --A.선수명,
+    --A.포지션,
+    --A.백넘버,
+    --A.키
+    A.*
+FROM 
+    (SELECT 
+        T.TEAM_NAME 팀명,
+        P.PLAYER_NAME 선수명,
+        P.POSITION 포지션,
+        P.BACK_NO 백넘버,
+        P.HEIGHT 키
+    FROM PLAYER P
+        JOIN TEAM T
+            ON P.TEAM_ID LIKE T.TEAM_ID         
+    WHERE 
+        T.TEAM_ID LIKE 
+            (SELECT TEAM_ID
+            FROM TEAM
+            WHERE TEAM_NAME LIKE '삼성블루윙즈'
+            )
+        AND P.HEIGHT IS NOT NULL 
+    ORDER BY P.HEIGHT DESC) A;
+
+;
+
+
+--025
+--삼성블루윙즈에서 키순으로 탑10
+--ROWNUM 
+
+SELECT 
+     ROWNUM "No.",
+    --A.팀명,
+    --A.선수명,
+    --A.포지션,
+    --A.백넘버,
+    --A.키
+    A.*
+FROM 
+    (SELECT
+        T.TEAM_NAME 팀명,
+        P.PLAYER_NAME 선수명,
+        P.POSITION 포지션,
+        P.BACK_NO 백넘버,
+        P.HEIGHT 키
+    FROM PLAYER P
+        JOIN TEAM T
+            ON P.TEAM_ID LIKE T.TEAM_ID         
+    WHERE 
+        T.TEAM_ID LIKE 
+            (SELECT TEAM_ID
+            FROM TEAM
+            WHERE TEAM_NAME LIKE '삼성블루윙즈'
+            )
+        AND P.HEIGHT IS NOT NULL 
+        
+    ORDER BY P.HEIGHT DESC) A
+WHERE ROWNUM <= 10
+;
+
+
+--025
+--삼성블루윙즈에서 키순으로 11등~ 20등
+SELECT 
+    ROWNUM RNUM,
+    B.*
+FROM
+(SELECT 
+     ROWNUM "No.",
+    --A.팀명,
+    --A.선수명,
+    --A.포지션,
+    --A.백넘버,
+    --A.키
+    A.*
+FROM 
+    (SELECT
+        T.TEAM_NAME 팀명,
+        P.PLAYER_NAME 선수명,
+        P.POSITION 포지션,
+        P.BACK_NO 백넘버,
+        P.HEIGHT 키
+    FROM PLAYER P
+        JOIN TEAM T
+            ON P.TEAM_ID LIKE T.TEAM_ID         
+    WHERE 
+        T.TEAM_ID LIKE 
+            (SELECT TEAM_ID
+            FROM TEAM
+            WHERE TEAM_NAME LIKE '삼성블루윙즈'
+            )
+        AND P.HEIGHT IS NOT NULL 
+        
+    ORDER BY P.HEIGHT DESC) A) B
+WHERE RNUM BETWEEN 11 AND 20
+;
+
+-- 026
+-- 팀별 골키퍼의 평균 키에서
+-- 가장 평균키가 큰 팀명은
+
+SELECT
+    ROWNUM NO,
+    A.SOCTEAM
+FROM
+(SELECT
+        T.TEAM_NAME SOCTEAM
+        ,ROUND(AVG(P.HEIGHT))||'cm' HEIGHT
+    FROM
+        TEAM T
+        JOIN PLAYER P
+        ON T.TEAM_ID LIKE P.TEAM_ID
+    WHERE
+        P.POSITION LIKE 'GK'
+    GROUP BY
+        T.TEAM_NAME
+    ORDER BY
+        HEIGHT DESC
+) A
+WHERE ROWNUM = 1
+;
+
+
+-- 027
+-- 각 구단별 선수들 평균키가 
+--삼성 블루윙즈팀의 평균키보다 작은 
+--팀의 이름과 해당 팀의 평균키를 구하시오
+
+SELECT 
+    T.TEAM_NAME 팀명,
+    AVG(P.HEIGHT) 평균키
+FROM
+    TEAM T
+    JOIN PLAYER P
+    ON T.TEAM_ID LIKE P.TEAM_ID
+    JOIN 
+        (SELECT 
+        P.TEAM_ID AID,
+        ROUND(AVG(P.HEIGHT)) AVGH
+        FROM 
+            PLAYER P
+            JOIN TEAM T
+            ON P.TEAM_ID LIKE T.TEAM_ID
+        WHERE
+            T.TEAM_NAME LIKE '삼성블루윙즈') A
+    ON T.TEAM_ID LIKE A.AID
+    JOIN
+        (SELECT 
+        P.TEAM_ID BID,
+        ROUND(AVG(P.HEIGHT)) AVGH
+        FROM 
+            PLAYER P
+            JOIN TEAM T
+            ON P.TEAM_ID LIKE T.TEAM_ID
+        WHERE
+            T.TEAM_NAME NOT LIKE '삼성블루윙즈') B
+    ON T.TEAM_ID LIKE B.BID 
+    
+WHERE
+   B.AVGH <= A.AVGH
+GROUP BY T.TEAM_NAME
+ORDER BY ROUND(AVG(P.HEIGHT)) DESC
+;
+
+select
+   (select tb.team_name
+   from team tb
+   where tb.team_id like t.team_id) 팀명,
+   round(avg(p.height),2) 평균키 
+from player p
+   join team t
+       on p.team_id like t.team_id
+group by t.team_id
+having avg(p.height)<(
+       select avg(pa.height)
+       from player pa
+           join team ta
+               on pa.team_id like ta.team_id
+       where ta.team_name like '삼성블루윙즈')
+;
+
+
+
+-- 028
+-- 2012년 경기 중에서 점수차가 가장 큰 경기 전부
+--ABS는 오라클전용, 지양하자
+
+SELECT
+    SC.SCHE_DATE 날짜,
+    HT.TEAM_NAME 홈팀,
+    AT.TEAM_NAME 원정팀,
+    ABS(SC.HOME_SCORE - SC.AWAY_SCORE) 점수차
+FROM
+    SCHEDULE SC
+    JOIN STADIUM S
+        ON SC.STADIUM_ID LIKE S.STADIUM_ID
+    JOIN TEAM HT
+        ON SC.HOMETEAM_ID LIKE HT.TEAM_ID
+    JOIN TEAM AT
+        ON SC.AWAYTEAM_ID LIKE AT.TEAM_ID
+WHERE
+    SC.SCHE_DATE LIKE '2012%'
+    AND (SC.HOME_SCORE - SC.AWAY_SCORE) IS NOT NULL
+ORDER BY 
+    ABS(SC.HOME_SCORE - SC.AWAY_SCORE) DESC
+    ,SC.SCHE_DATE
+;
+
+-- 028
+-- 2012년 경기 중에서 점수차가 가장 큰 경기 전부
+-- 20120317, 일화천마 VS 유나이티드, 점수차
+SELECT A.*
+FROM(SELECT
+        K.SCHE_DATE 경기날짜,
+        HT.TEAM_NAME || ' VS ' || AT.TEAM_NAME 경기,
+        CASE
+            WHEN K.HOME_SCORE >= K.AWAY_SCORE THEN (K.HOME_SCORE - K.AWAY_SCORE)
+            ELSE K.AWAY_SCORE - K.HOME_SCORE
+        END 점수차
+     FROM
+        SCHEDULE K
+        JOIN TEAM HT
+            ON K.HOMETEAM_ID LIKE HT.TEAM_ID
+        JOIN TEAM AT
+            ON K.AWAYTEAM_ID LIKE AT.TEAM_ID
+     WHERE
+        K.SCHE_DATE LIKE '2012%'
+        AND K.GUBUN LIKE 'Y'
+    
+     ORDER BY 점수차 DESC) A
+WHERE ROWNUM LIKE 1
+;
+
+
+
+
+
+
+-- 029
+-- 좌석수대로 스타디움 순서 매기기
+SELECT
+    ROWNUM NO,
+    A.*
+FROM
+    (SELECT
+        S.STADIUM_NAME 스타디움,
+        S.SEAT_COUNT 좌석수
+    FROM
+        STADIUM S
+    ORDER BY S.SEAT_COUNT DESC) A
+ORDER BY NO 
+;
+
+-- 030
+-- 2012년 구단 승리 순으로 순위매기기
+SELECT
+    HT.TEAM_NAME 홈팀,
+    AT.TEAM_NAME 원정팀,
+    (HOME_SCORE - SC.AWAY_SCORE) HTWIN,
+    (SC.AWAY_SCORE - SC.HOME_SCORE) ATWIN
+FROM 
+    SCHEDULE SC
+    JOIN STADIUM S
+        ON SC.STADIUM_ID LIKE S.STADIUM_ID
+    JOIN TEAM HT
+        ON SC.HOMETEAM_ID LIKE HT.TEAM_ID
+    JOIN TEAM AT
+        ON SC.AWAYTEAM_ID LIKE AT.TEAM_ID
+
+;
+
+
+
+SELECT    
+   A.TEAM_NAME 팀명,    
+   COUNT(A.SCORE)+COUNT(B.SCORE) 승수
+FROM    (SELECT    
+           SC.HOME_SCORE - SC.AWAY_SCORE SCORE,
+           HT.TEAM_ID TEAM_ID,
+           HT.TEAM_NAME TEAM_NAME
+       FROM SCHEDULE SC
+           JOIN TEAM HT ON HT.TEAM_ID LIKE SC.HOMETEAM_ID
+           JOIN TEAM AT ON AT.TEAM_ID LIKE SC.AWAYTEAM_ID
+       WHERE
+           SC.HOME_SCORE - SC.AWAY_SCORE >0
+           AND SC.SCHE_DATE LIKE '2012%') A 
+       JOIN
+       (SELECT    
+           SC1.AWAY_SCORE - SC1.HOME_SCORE SCORE,
+           AT1.TEAM_ID TEAM_ID,
+           AT1.TEAM_NAME TEAM_NAME
+       FROM SCHEDULE SC1
+           JOIN TEAM HT1 ON HT1.TEAM_ID LIKE SC1.HOMETEAM_ID
+           JOIN TEAM AT1 ON AT1.TEAM_ID LIKE SC1.AWAYTEAM_ID
+       WHERE
+           SC1.AWAY_SCORE - SC1.HOME_SCORE >0
+           AND SC1.SCHE_DATE LIKE '2012%') B ON A.TEAM_ID LIKE B.TEAM_ID
+GROUP BY
+       A.TEAM_ID,A.TEAM_NAME
+ORDER BY    
+       COUNT(A.SCORE) DESC
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
